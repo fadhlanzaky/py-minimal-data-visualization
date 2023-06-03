@@ -19,3 +19,6 @@ to use it, just install all the required libs
  ![main](/images/main.png)
  ![line-charts](/images/line-charts.png)
  ![bar-charts](/images/bar-charts.png)
+
+## contact
+Fadhlan Zaky Muttaqin - fadhlanzaky01@gmail.com - [linkedin](https://www.linkedin.com/in/fadhlanzaky/)
