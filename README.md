@@ -10,7 +10,7 @@ to use it, just install all the required libs
  
  and start the application
  ```sh
-  flask run
+  python .\run.py
  ```
  
  This app reads data from the uploaded csv file, store it in tmp folder, and delete it after. All the csv files that I've tried were sourced from [kaggle datasets](https://www.kaggle.com/datasets), I included some of the files in datasets folder.
