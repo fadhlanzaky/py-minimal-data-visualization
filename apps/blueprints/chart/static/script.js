@@ -32,7 +32,7 @@ $(function(){
 
         file = e.originalEvent.dataTransfer.files[0];
         var file_type = file.type;
-        console.log(file_type)
+        // console.log(file_type)
         if(file_type == 'text/csv' | file_type == 'application/vnd.ms-excel'){
             formData = new FormData();
             formData.append("file", file);
@@ -48,16 +48,19 @@ $(function(){
                     xhr.setRequestHeader('X-CSRFToken', csrftoken);
                 },
                 success: function(data){
-                    console.log(data);
+                    // console.log(data);
                     $('#form').hide();
                     $('#result').show();
                     $('#filename').html(data.filename);
-                    $.each(data.columns, function(index, value){
-                        $('#dataX').find('select').append('<option value="'+index+'">'+value+'</option>')
-                        $('#dataY').find('select').append('<option value="'+index+'">'+value+'</option>')
-                        $('#dataZ').find('select').append('<option value="'+index+'">'+value+'</option>')
-                        $('#query_col').find('select').append('<option value="'+index+'">'+value+'</option>')
+                    $.each(data.columns, function(_, value){
+                        $('#dataX').find('select').append('<option value="'+value+'">'+value+'</option>')
+                        $('#dataY').find('select').append('<option value="'+value+'">'+value+'</option>')
+                        $('#dataZ').find('select').append('<option value="'+value+'">'+value+'</option>')
+                        $('#query_col').find('select').append('<option value="'+value+'">'+value+'</option>')
                     })
+                },
+                error: function(data){
+                    alert(data.responseJSON.message)
                 }
             });
         }else{
@@ -69,14 +72,16 @@ $(function(){
     $('#generate-btn').on('click', function(){
         formData = new FormData();
         formData.append("filename", $('#filename').html());
-        formData.append("charts", $('#charts option:selected').val());
-        formData.append("x", $('#dataX').find('select option:selected').val());
-        formData.append("y", $('#dataY').find('select option:selected').val());
-        formData.append("z", $('#dataZ').find('select option:selected').val());
+        formData.append("column_x", $('#dataX').find('select option:selected').val());
+        formData.append("column_y", $('#dataY').find('select option:selected').val());
+        formData.append("column_z", $('#dataZ').find('select option:selected').val());
         formData.append("query_col", $('#query_col').find('select option:selected').val());
         formData.append("query_val", $('#query_val').find('select option:selected').val());
+
+        const chart = $('#charts option:selected').val()
+
         $.ajax({
-            url: '/generate_chart',
+            url: '/generate_chart/'+chart,
             data: formData,
             processData: false,
             contentType: false,
@@ -85,17 +90,18 @@ $(function(){
                 xhr.setRequestHeader('X-CSRFToken', csrftoken);
             },
             success: function(data){
-                $('#visual-area').html(data.message)
+                $('#visual-area').html(data.chart)
             },
             error: function(data){
-                console.log(data)
+                // console.log(data)
                 alert(data.responseJSON.message)
             }
         });
     })
 
     $('#charts').on('change', function(){
-        if ($(this).find('option:selected').val() == 'b_sp'){
+        let opt = $(this).find('option:selected').val();
+        if ( opt == 'b_sp' ){
             $('#dataY').show();
             $('#dataZ').hide();
             $('#query_col').hide();
@@ -103,7 +109,7 @@ $(function(){
             $('label[for="dataX"]').html('X :');
             $('label[for="dataY"]').html('Y :');
         }
-        else if (jQuery.inArray($(this).find('option:selected').val(), ['b_lc', 'b_bp']) !== -1){
+        else if (jQuery.inArray( opt, ['b_lc', 'b_bp'] ) !== -1){
             $('#dataY').show();
             $('#dataZ').hide();
             $('#query_col').show();
@@ -113,7 +119,7 @@ $(function(){
             $('label[for="dataY"]').html('Y :');
             ('label[for="query_col"]').html('Column :');
         }
-        else if ($(this).find('option:selected').val() == 'b_bc'){
+        else if ( opt == 'b_bc' ){
             $('#dataY').show();
             $('#dataZ').hide();
             $('#query_col').show();
@@ -122,7 +128,7 @@ $(function(){
             $('label[for="dataY"]').html('Y :');
             $('label[for="query_col"]').html('Data :');
         }
-        else if ($(this).find('option:selected').val() == 'b_pc'){
+        else if ( opt == 'b_pc' ){
             $('#query_col').hide();
             $('#query_val').hide();
             $('#dataZ').hide();
@@ -130,14 +136,14 @@ $(function(){
             $('label[for="dataX"]').html('Data :');
             $('label[for="dataY"]').html('Group :');
         }
-        else if ($(this).find('option:selected').val() == 'b_h'){
+        else if ( opt == 'b_h' ){
             $('#dataZ').hide();
             $('#query_col').hide();
             $('#query_val').hide();
             $('#dataY').hide();
             $('label[for="dataX"]').html('X :');
         }
-        else if ($(this).find('option:selected').val() == 'b_3lc'){
+        else if ( opt == 'b_3lc' ){
             $('#dataY').show();
             $('#dataZ').show();
             $('#query_col').show();
@@ -151,17 +157,24 @@ $(function(){
 
     $('#query_col').find('select').on('change', function(){
         if (jQuery.inArray($('#charts').find('option:selected').val(), ['b_lc', 'b_bp', 'b_3lc']) !== -1){
-            $.ajax({
-                url: '/get_col_value?file='+$('#filename').html()+'&column_index='+$(this).find('option:selected').val(),
+            const column = $(this).find('option:selected').val()
+            if(column != undefined){
+                $.ajax({
+                url: '/get_col_value?file='+$('#filename').html()+'&column='+column,
                 type: 'GET',
                 beforeSend: function (xhr){
                     xhr.setRequestHeader('X-CSRFToken', csrftoken);
                 },
                 success: function(data){
-                    $('#query_val').find('select').html(data.message);
+                    $.each(data, function(_, item){
+                        $('#query_val').find('select').append('<option value="'+item+'">'+item+'</option>');
+                    })
+                    
                     $('#query_val').show();
                 }
             });
+            }
+            
         }
     })
 
